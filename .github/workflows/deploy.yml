@@ -1,0 +1,23 @@
+name: Deploy JasonRKelly.com
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to hosting server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST_NAME }}
+          username: ${{ secrets.HOST_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.HOST_PATH }}
+            git fetch origin
+            git checkout main
+            git pull --ff-only origin main
