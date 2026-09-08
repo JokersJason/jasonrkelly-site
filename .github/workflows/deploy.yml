@@ -1,4 +1,4 @@
-name: Deploy JasonRKelly.com
+name: Deploy JasonRKelly.com UAT
 
 on:
   push:
@@ -10,14 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to hosting server
+      - name: Deploy UAT to hosting server
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.HOST_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ${{ secrets.HOST_PATH }}
+            set -eu
+            cd "${{ secrets.HOST_PATH }}"
             git fetch origin
             git checkout main
             git pull --ff-only origin main
+
+            # Publish only BRK contents after the existing builder update succeeds.
+            brk_source="$(pwd -P)/archives/brk"
+            brk_target="/home/jasonrke/www/brk-uat"
+            test "$(realpath -e "$brk_source")" = "/home/jasonrke/www/builder/archives/brk"
+            test -f "$brk_source/index.html"
+            test -f "$brk_source/assets/styles.css"
+            test -f "$brk_source/assets/site.js"
+            test -d "$brk_target"
+            test "$(realpath -e "$brk_target")" = "$brk_target"
+            test -w "$brk_target"
+            # Reject links that could redirect reads or writes outside these roots.
+            brk_links="$(find "$brk_source" "$brk_target" -type l -print)"
+            test -z "$brk_links"
+            # Trailing slashes copy contents, with no extra archives/brk nesting.
+            # Do not delete target-only files (including hosting-managed files).
+            rsync -r --checksum -- "$brk_source/" "$brk_target/"

@@ -4,7 +4,7 @@ JasonRKelly.com is a no-build static website managed through Git, GitHub, VS Cod
 
 The repository uses a controlled development workflow in which normal development occurs on feature branches and approved changes are merged into `main`.
 
-`main` is the production deployment branch.
+`main` is the deployment branch. The current deployment destinations are UAT: `builder.jasonrkelly.com` for the full site and `brk-uat.jasonrkelly.com` for the BRK archive. `brk.jasonrkelly.com` is reserved for future production and QR use; this workflow does not publish there.
 
 ---
 
@@ -542,7 +542,7 @@ Push feature branch
 ≠ production deployment
 
 Merge approved PR into main
-= production deployment trigger
+= UAT deployment trigger
 ```
 
 ---
@@ -799,7 +799,13 @@ git checkout main
 git pull --ff-only origin main
 ```
 
-`--ff-only` prevents the production hosting repository from automatically creating merge commits if histories unexpectedly diverge.
+`--ff-only` prevents the UAT hosting repository from automatically creating merge commits if histories unexpectedly diverge.
+
+After that existing builder update succeeds, the same SSH session publishes the **contents** of `archives/brk/` from the updated checkout to the existing `/home/jasonrke/www/brk-uat/` document root using `rsync -r --checksum`. For example, `archives/brk/index.html` becomes `www/brk-uat/index.html`, and `archives/brk/assets/` becomes `www/brk-uat/assets/`. No extra `archives/brk/` directory is created in the target.
+
+The remote script stops on errors. Before copying, it verifies the canonical source and target paths, the three BRK foundation files, and an existing writable target directory. It rejects symlinks in either tree to avoid copying or writing outside the intended roots. The server must provide `realpath`, `find`, and `rsync`; a missing utility or failed check fails the workflow. The workflow does not create the target directory or change document-root configuration.
+
+The BRK copy reuses the existing SSH deployment identity and secrets. It does not delete target-only files, so removing a published file from Git does not remove its BRK UAT copy. A failed BRK publish fails the workflow but does not roll back the completed builder update; a copy failure may leave BRK UAT partially updated.
 
 ---
 
@@ -829,7 +835,7 @@ Hosting Git working directory:
 /home/jasonrke/www/builder
 ```
 
-Production deployment branch:
+UAT deployment branch:
 
 ```text
 main
@@ -847,11 +853,20 @@ The hosting repository's local `main` tracks:
 origin/main
 ```
 
-Current staging / deployment verification site:
+Main-site UAT (existing deployment target, unchanged):
 
 ```text
 https://builder.jasonrkelly.com
 ```
+
+BRK UAT:
+
+```text
+https://brk-uat.jasonrkelly.com
+/home/jasonrke/www/brk-uat/
+```
+
+Only `archives/brk/` contents are published to this isolated document root. `https://brk.jasonrkelly.com/` remains reserved for future production and printed QR codes.
 
 ---
 
@@ -949,7 +964,7 @@ Your branch is up to date with 'origin/main'.
 nothing to commit, working tree clean
 ```
 
-Then verify the hosted website.
+Then verify the hosted website. This manual Git-only fallback updates builder UAT only; it does not perform the separate BRK UAT copy described above.
 
 ---
 
