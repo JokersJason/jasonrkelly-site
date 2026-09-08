@@ -94,3 +94,110 @@ Codex should not:
 - Make destructive Git changes without explicit approval.
 
 Jason remains the final reviewer and approves merges into `main`.
+## Development Responsibility Model
+
+This repository uses a defined responsibility model across Jason, jAIson, Codex, GitHub, GitHub Actions, and the hosting environment.
+
+### Jason
+
+Jason is responsible for:
+
+- Defining requirements and desired outcomes.
+- Deciding what should be changed.
+- Approving implementation direction.
+- Performing or approving local validation.
+- Reviewing pull requests.
+- Approving merges into `main`.
+- Acting as the final authority for production changes.
+
+### jAIson
+
+jAIson is responsible for:
+
+- Architecture and workflow planning.
+- Explaining Git, GitHub, deployment, and development concepts.
+- Troubleshooting development and deployment issues.
+- Helping define implementation approaches.
+- Maintaining milestone and commit structure.
+- Helping review technical decisions before implementation.
+
+jAIson does not directly authorize production deployment.
+
+### Codex
+
+Codex is responsible for:
+
+- Inspecting repository files.
+- Implementing approved changes on feature branches.
+- Refactoring code when requested.
+- Explaining implementation choices.
+- Reviewing diffs.
+- Assisting with troubleshooting.
+- Performing scoped repository-aware development tasks.
+
+Codex must not:
+
+- Work directly on `main` for normal development.
+- Merge pull requests.
+- Push directly to production.
+- Modify secrets, credentials, or SSH keys.
+- Delete branches without explicit instruction.
+- Perform destructive Git operations without explicit approval.
+
+### GitHub
+
+GitHub is responsible for:
+
+- Acting as the authoritative source repository.
+- Maintaining branch history.
+- Hosting feature branches.
+- Managing pull requests.
+- Providing code review and merge controls.
+- Recording approved changes to `main`.
+
+### GitHub Actions
+
+GitHub Actions is responsible for:
+
+- Detecting changes merged into `main`.
+- Running the configured deployment workflow.
+- Connecting to the hosting environment using the dedicated deployment identity.
+- Updating the hosted repository.
+
+GitHub Actions should deploy only from the approved production branch.
+
+### Code Support Hosting
+
+The Code Support hosting environment is responsible for:
+
+- Hosting the deployed website.
+- Serving the production website files.
+- Receiving approved updates from the GitHub Actions deployment workflow.
+
+Production files should not normally be edited directly on the hosting server.
+
+## Standard Development Flow
+
+The expected workflow is:
+
+Jason defines the requirement
+→ jAIson helps design the approach
+→ feature branch is created
+→ Codex or Jason implements locally
+→ Jason reviews the diff
+→ local validation is performed
+→ changes are committed
+→ feature branch is pushed
+→ pull request is created
+→ Jason reviews and approves
+→ pull request is merged into `main`
+→ GitHub Actions deploys
+→ production is verified
+
+The core rule is:
+
+Jason decides and approves.
+jAIson helps design and troubleshoot.
+Codex implements within repository guardrails.
+GitHub controls source and review.
+GitHub Actions deploys approved changes.
